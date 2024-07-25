@@ -45,5 +45,10 @@ func (h handler) storeMessage(c echo.Context) error {
 }
 
 func (h handler) getStats(c echo.Context) error {
-	return c.String(http.StatusOK, "TODO Statistics!!!")
+	countProcessed, err := h.uc.GetStats()
+	if err != nil {
+		return err
+	}
+
+	return c.String(http.StatusOK, fmt.Sprintf("Processed messages for all time: %v", countProcessed))
 }

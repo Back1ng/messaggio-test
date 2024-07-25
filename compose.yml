@@ -3,7 +3,19 @@ networks:
     driver: bridge
 
 services:
-  # todo golang app
+  api:
+    container_name: api
+    env_file:
+      - .env
+    depends_on:
+      - kafka
+      - db
+    ports:
+     - 127.0.0.1:1323:1323
+    build:
+      dockerfile: docker/api/Dockerfile
+    networks:
+      - messaggio
   db:
     image: postgres:16.3-alpine
     restart: always
@@ -17,4 +29,29 @@ services:
       POSTGRES_PASSWORD: ${DB_PASSWORD}
     volumes:
       - ./db-data:/var/lib/postgresql/data
-  # todo kafka
+  kafka:
+    image: 'bitnami/kafka:latest'
+    networks:
+      - messaggio
+    ports:
+      - 127.0.0.1:9092:9092
+      - 127.0.0.1:9093:9093
+    environment:
+      - KAFKA_CFG_NODE_ID=0
+      - KAFKA_CFG_PROCESS_ROLES=controller,broker
+      - KAFKA_CFG_LISTENERS=PLAINTEXT://:9092,CONTROLLER://:9093
+      - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
+      - KAFKA_CFG_CONTROLLER_QUORUM_VOTERS=0@kafka:9093
+      - KAFKA_CFG_CONTROLLER_LISTENER_NAMES=CONTROLLER
+      - KAFKA_CFG_AUTO_CREATE_TOPICS_ENABLE=true
+  
+  kafka-ui:
+    image: provectuslabs/kafka-ui
+    networks:
+      - messaggio
+    ports:
+      - 127.0.0.1:8080:8080
+    environment:
+      KAFKA_CLUSTERS_0_NAME: local
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9092
+      DYNAMIC_CONFIG_ENABLED: 'true'
