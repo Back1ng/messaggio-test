@@ -16,6 +16,7 @@ services:
       dockerfile: docker/api/Dockerfile
     networks:
       - messaggio
+    restart: always
   db:
     image: postgres:16.3-alpine
     restart: always
